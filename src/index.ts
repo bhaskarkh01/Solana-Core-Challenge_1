@@ -6,6 +6,9 @@ dotenv.config();
 async function main() {
   const connection = new Web3.Connection(Web3.clusterApiUrl("devnet"));
   const signer = await initializeKeypair(connection);
+  const receiver = new Web3.Keypair();
+  await transferSOL(connection, signer, receiver);
+
   console.log("Public key:", signer.publicKey.toBase58());
 }
 
@@ -52,8 +55,32 @@ async function airdropSolIfNeeded(signer: Web3.Keypair, connection: Web3.Connect
   }
 }
 
-async function transferSOL(connection: Web3.Connection, payer: Web3.Keypair) {
-  
+async function transferSOL(connection: Web3.Connection, sender: Web3.Keypair, receiver: Web3.Keypair) {
+  const senderOldBalance = await connection.getBalance(sender.publicKey);
+  const receiverOldBalance = await connection.getBalance(receiver.publicKey);
+
+  const transaction = new Web3.Transaction();
+
+  const transferSOLInstruction = Web3.SystemProgram.transfer({
+    fromPubkey: sender.publicKey,
+    toPubkey: receiver.publicKey,
+    lamports: Web3.LAMPORTS_PER_SOL * 0.5,
+  });
+
+  console.log("Sender balance before transfer: ", senderOldBalance);
+  console.log("Receiver balance before transfer: ", receiverOldBalance);
+
+  transaction.add(transferSOLInstruction);
+
+  const signature = await Web3.sendAndConfirmTransaction(connection, transaction, [sender]);
+
+  const senderNewBalance = await connection.getBalance(sender.publicKey);
+  const receiverNewBalance = await connection.getBalance(receiver.publicKey);
+
+  console.log(`Transaction https://explorer.solana.com/tx/${signature}?cluster=devnet`);
+
+  console.log("Sender balance after transfer: ", senderNewBalance);
+  console.log("Receiver balance after transfer: ", receiverNewBalance);
 }
 
 main()
