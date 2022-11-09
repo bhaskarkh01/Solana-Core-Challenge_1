@@ -1,4 +1,4 @@
-# Solana-Core-Challenge1
+# Solana-Core_1-Challenge_1
 
 * This is the first challenge (Core 1) to create a script in Typescript from scratch.
 
